@@ -48,6 +48,10 @@ APP.Main = (function() {
     tmplStoryDetailsComment = tmplStoryDetailsComment.replace(intlRelative, '');
   }
 
+  var storyDetails = document.createElement('section');
+  storyDetails.classList.add('story-details');
+  document.body.appendChild(storyDetails);
+
   var storyTemplate =
       Handlebars.compile(tmplStory);
   var storyDetailsTemplate =
@@ -86,13 +90,11 @@ APP.Main = (function() {
     // }
 
     // Colorize on complete.
-    if (storyLoadCount === 0)
-      colorizeAndScaleStories();
+    // if (storyLoadCount === 0)
+      // colorizeAndScaleStories();
   }
 
   function onStoryClick(details) {
-
-    var storyDetails = $('sd-' + details.id);
 
     // Wait a little time then show the story details.
     // setTimeout(showStory.bind(this, details.id), 60);
@@ -103,7 +105,7 @@ APP.Main = (function() {
     // And maybe, since they're all the same, I don't
     // need to make a new element every single time? I mean,
     // it inflates the DOM and I can only see one at once.
-    if (!storyDetails) {
+    // if (!storyDetails) {
 
       if (details.url)
         details.urlobj = new URL(details.url);
@@ -119,12 +121,8 @@ APP.Main = (function() {
         by: '', text: 'Loading comment...'
       });
 
-      storyDetails = document.createElement('section');
       storyDetails.setAttribute('id', 'sd-' + details.id);
-      storyDetails.classList.add('story-details');
       storyDetails.innerHTML = storyDetailsHtml;
-
-      document.body.appendChild(storyDetails);
 
       commentsElement = storyDetails.querySelector('.js-comments');
       storyHeader = storyDetails.querySelector('.js-header');
@@ -159,7 +157,7 @@ APP.Main = (function() {
               localeData);
         });
       }
-    }
+    // }
 
   }
 
@@ -312,7 +310,7 @@ APP.Main = (function() {
     var scrollTopCapped = Math.min(70, main.scrollTop);
     var scaleString = 'scale(' + (1 - (scrollTopCapped / 300)) + ')';
 
-    colorizeAndScaleStories();
+    // colorizeAndScaleStories();
 
     header.style.height = (156 - scrollTopCapped) + 'px';
     headerTitles.style.webkitTransform = scaleString;
@@ -328,7 +326,7 @@ APP.Main = (function() {
     var loadThreshold = (main.scrollHeight - main.offsetHeight -
         LAZY_LOAD_THRESHOLD);
     if (main.scrollTop > loadThreshold)
-      loadStoryBatch();
+      window.requestAnimationFrame(loadStoryBatch);
   });
 
   function loadStoryBatch() {
@@ -360,13 +358,13 @@ APP.Main = (function() {
     }
 
     storyStart += count;
-
+    requestAnimationFrame(loadStoryBatch);
   }
 
   // Bootstrap in the stories.
   APP.Data.getTopStories(function(data) {
     stories = data;
-    loadStoryBatch();
+    window.requestAnimationFrame(loadStoryBatch);
     main.classList.remove('loading');
   });
 
