@@ -62,17 +62,18 @@ APP.Main = (function() {
    * probably in a requestAnimationFrame callback.
    */
   function onStoryData (key, details) {
-
+    console.log(key,details)
     // This seems odd. Surely we could just select the story
     // directly rather than looping through all of them.
-    var storyElements = document.querySelectorAll('.story');
+    // var storyElements = document.querySelectorAll('.story');
+    var story = document.getElementById('s-'+key);
 
-    for (var i = 0; i < storyElements.length; i++) {
+    // for (var i = 0; i < storyElements.length; i++) {
 
-      if (storyElements[i].getAttribute('id') === 's-' + key) {
+      // if (storyElements[i].getAttribute('id') === 's-' + key) {
 
         details.time *= 1000;
-        var story = storyElements[i];
+        // var story = storyElements[i];
         var html = storyTemplate(details);
         story.innerHTML = html;
         story.addEventListener('click', onStoryClick.bind(this, details));
@@ -81,8 +82,8 @@ APP.Main = (function() {
         // Tick down. When zero we can batch in the next load.
         storyLoadCount--;
 
-      }
-    }
+      // }
+    // }
 
     // Colorize on complete.
     if (storyLoadCount === 0)
@@ -94,7 +95,8 @@ APP.Main = (function() {
     var storyDetails = $('sd-' + details.id);
 
     // Wait a little time then show the story details.
-    setTimeout(showStory.bind(this, details.id), 60);
+    // setTimeout(showStory.bind(this, details.id), 60);
+    window.requestAnimationFrame(showStory.bind(this, details.id));
 
     // Create and append the story. A visual change...
     // perhaps that should be in a requestAnimationFrame?
@@ -162,7 +164,7 @@ APP.Main = (function() {
   }
 
   function showStory(id) {
-
+    console.log('show story')
     if (inDetails)
       return;
 
@@ -177,21 +179,22 @@ APP.Main = (function() {
     document.body.classList.add('details-active');
     storyDetails.style.opacity = 1;
 
+    // Find out where it currently is.
+    var storyDetailsPosition = storyDetails.getBoundingClientRect();
+    // console.log(storyDetailsPosition)
+
     function animate () {
-
-      // Find out where it currently is.
-      var storyDetailsPosition = storyDetails.getBoundingClientRect();
-
       // Set the left value if we don't have one already.
       if (left === null)
         left = storyDetailsPosition.left;
 
       // Now figure out where it needs to go.
       left += (0 - storyDetailsPosition.left) * 0.1;
-
+      console.log(left)
       // Set up the next bit of the animation if there is more to do.
       if (Math.abs(left) > 0.5)
-        setTimeout(animate, 4);
+        // setTimeout(animate, 4);
+        window.requestAnimationFrame(animate);
       else
         left = 0;
 
@@ -204,7 +207,8 @@ APP.Main = (function() {
     // every few milliseconds. That's going to keep
     // it all tight. Or maybe we're doing visual changes
     // and they should be in a requestAnimationFrame
-    setTimeout(animate, 4);
+    // setTimeout(animate, 4);
+    window.requestAnimationFrame(animate);
   }
 
   function hideStory(id) {
@@ -218,19 +222,20 @@ APP.Main = (function() {
     document.body.classList.remove('details-active');
     storyDetails.style.opacity = 0;
 
-    function animate () {
+    // Find out where it currently is.
+    var mainPosition = main.getBoundingClientRect();
+    var storyDetailsPosition = storyDetails.getBoundingClientRect();
+    var target = mainPosition.width + 100;
 
-      // Find out where it currently is.
-      var mainPosition = main.getBoundingClientRect();
-      var storyDetailsPosition = storyDetails.getBoundingClientRect();
-      var target = mainPosition.width + 100;
+    function animate () {
 
       // Now figure out where it needs to go.
       left += (target - storyDetailsPosition.left) * 0.1;
 
       // Set up the next bit of the animation if there is more to do.
       if (Math.abs(left - target) > 0.5) {
-        setTimeout(animate, 4);
+        // setTimeout(animate, 4);
+        window.requestAnimationFrame(animate);
       } else {
         left = target;
         inDetails = false;
@@ -245,7 +250,8 @@ APP.Main = (function() {
     // every few milliseconds. That's going to keep
     // it all tight. Or maybe we're doing visual changes
     // and they should be in a requestAnimationFrame
-    setTimeout(animate, 4);
+    // setTimeout(animate, 4);
+    window.requestAnimationFrame(animate);
   }
 
   /**
@@ -264,6 +270,10 @@ APP.Main = (function() {
       var score = story.querySelector('.story__score');
       var title = story.querySelector('.story__title');
 
+      // Now figure out how wide it is and use that to saturate it.
+      scoreLocation = score.getBoundingClientRect();
+      var saturation = (100 * ((scoreLocation.width - 38) / 2));
+
       // Base the scale on the y position of the score.
       var height = main.offsetHeight;
       var mainPosition = main.getBoundingClientRect();
@@ -272,28 +282,28 @@ APP.Main = (function() {
       var scale = Math.min(1, 1 - (0.05 * ((scoreLocation - 170) / height)));
       var opacity = Math.min(1, 1 - (0.5 * ((scoreLocation - 170) / height)));
 
+      // console.log(score.style.width)
       score.style.width = (scale * 40) + 'px';
       score.style.height = (scale * 40) + 'px';
+      // score.style.transform = `scale(${scale})`;
       score.style.lineHeight = (scale * 40) + 'px';
+      // console.log(score.style.width)
 
-      // Now figure out how wide it is and use that to saturate it.
-      scoreLocation = score.getBoundingClientRect();
-      var saturation = (100 * ((scoreLocation.width - 38) / 2));
 
       score.style.backgroundColor = 'hsl(42, ' + saturation + '%, 50%)';
       title.style.opacity = opacity;
     }
   }
 
-  main.addEventListener('touchstart', function(evt) {
+  // main.addEventListener('touchstart', function(evt) {
 
-    // I just wanted to test what happens if touchstart
-    // gets canceled. Hope it doesn't block scrolling on mobiles...
-    if (Math.random() > 0.97) {
-      evt.preventDefault();
-    }
+  //   // I just wanted to test what happens if touchstart
+  //   // gets canceled. Hope it doesn't block scrolling on mobiles...
+  //   if (Math.random() > 0.97) {
+  //     evt.preventDefault();
+  //   }
 
-  });
+  // });
 
   main.addEventListener('scroll', function() {
 
